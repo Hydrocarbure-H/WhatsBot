@@ -26,49 +26,38 @@ for i in range(20):
     for message in messages_list:
         msg_elem = dict()
         msg_elem["author"] = ""
-        msg_elem["message"] = ""
+        msg_elem["body"] = ""
         msg_elem["time"] = ""
+
+        msg_web = ""
+        msg_web_splitted = ""
         # Author
         try:
-            msg_elem["author"] = message.find_element(
-                By.XPATH, '//*[@id="main"]/div[2]/div/div[2]/div[3]/div[' + str(counter) + ']/div/div/div[2]/div[1]/div[1]').text
-            last_author = msg_elem["author"]
+            msg_web = message.find_element(
+                By.XPATH, '//*[@id="main"]/div[2]/div/div[2]/div[3]/div[' + str(counter) + ']').text
         except:
-            print("Error during parsing the author.")
-
-        # First message
-        # //*[@id="main"]/div[2]/div/div[2]/div[3]/div[33]/div/div/div[2]/div[1]/div[2]/div/span[1]/span
-        # second message
-        # //*[@id="main"]/div[2]/div/div[2]/div[3]/div[34]/div/div/div[1]/div[1]/div[1]/div/span[1]/span
-
-        # First message before quoted message
-        # //*[@id="main"]/div[2]/div/div[2]/div[3]/div[32]/div/div/div[1]/div[1]/div[2]/div[2]/span[1]/span
-        # Quoted message
-        # //*[@id="main"]/div[2]/div/div[2]/div[3]/div[32]/div/div/div[1]/div[1]/div[2]/div[1]/div/div/div/div
-
-        print("[" + msg_elem["author"] + "] \n")
+            print("Error during parsing the message element.")
 
         try:
-            msg_elem["message"] = message.find_element(By.XPATH, '//*[@id="main"]/div[2]/div/div[2]/div[3]/div[' + str(
-                counter) + ']/div/div/div[2]/div[1]/div[2]/div/span[1]/span').text
+            msg_web_splitted = msg_web.split("\n")
         except:
-            try:
-                msg_elem["message"] = message.find_element(By.XPATH, '//*[@id="main"]/div[2]/div/div[2]/div[3]/div[' + str(
-                    counter + 1) + ']/div/div/div[1]/div[1]/div[1]/div/span[1]/span').text
-            except:
-                print("Error during parsing the message.")
+            print("Empty element : " + msg_web)
 
-        # msg_elem["time"] = message.find_element(By.XPATH, '// *[@id="main"]/div[2]/div/div[2]/div[3]/div[' + str(
-        #     counter) + ']/div/div/div[1]/div[1]/div[2]/div/span').text
+        if (len(msg_web_splitted) == 3):
+            msg_elem["author"] = msg_web_splitted[0]
+            msg_elem["body"] = msg_web_splitted[1]
+            msg_elem["time"] = msg_web_splitted[2]
+            last_author = msg_elem["author"]
+        elif (len(msg_web_splitted) == 2):
+            msg_elem["author"] = last_author
+            msg_elem["body"] = msg_web_splitted[0]
+            msg_elem["time"] = msg_web_splitted[1]
+        else:
+            counter -= 1
+            continue
 
-        print("Message : " + msg_elem["message"] + "\n")
-        # msg_elem["author"] = (message.find_elements(
-        #     By.CLASS_NAME, "a71At"))[0].text
-        # # Message
-        # msg_elem[1] = (message.find_elements(By.CLASS_NAME, "i0jNr"))[0].text
-        # # Time
-        # msg_elem[2] = (message.find_elements(
-        #     By.CLASS_NAME, "tvf2evcx"))[0].text
+        print("[" + msg_elem["author"] + "] : " +
+              msg_elem["body"] + " (" + msg_elem["time"] + ")")
         clean_messages_list.append(msg_elem)
         counter -= 1
 
