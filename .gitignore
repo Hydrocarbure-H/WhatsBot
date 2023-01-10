@@ -5,7 +5,8 @@ __pycache__/
 .vscode/
 
 selenium/
-whatapp-web/
+
+cookies.pkl
 # C extensions
 *.so
 
