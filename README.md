@@ -1,2 +1,2 @@
 # WhatsBot
-WhatsApp bot to get all messages from a conversation.
+WhatsApp bot to get last messages from a conversation.
