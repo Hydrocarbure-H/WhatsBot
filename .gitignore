@@ -133,3 +133,4 @@ dmypy.json
 .pyre/
 cookies.pkl
 *.pkl
+.DS_Store
