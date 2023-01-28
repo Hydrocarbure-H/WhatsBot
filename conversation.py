@@ -12,7 +12,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 import time
-from hashlib  import sha256
+from hashlib import sha256
 from datetime import datetime
 
 from discord import DiscordWH
@@ -57,7 +57,7 @@ class Conversation:
         x_response = ".//div[contains(@data-testid, 'quoted-message')]"
         x_response_text = ".//div/div/span[contains(@class, 'quoted-mention')]"
         x_response_author = ".//div/div/span[not(contains(@class, 'quoted-mention'))]"
-        
+
         messages = self.__panel.find_elements(By.XPATH, x_container)
         messages_list = []
 
@@ -78,8 +78,12 @@ class Conversation:
 
                 try:
                     response_container = message.find_element(By.XPATH, x_response)
-                    response_text = response_container.find_element(By.XPATH, x_response_text).text
-                    response_author = response_container.find_element(By.XPATH, x_response_author).text
+                    response_text = response_container.find_element(
+                        By.XPATH, x_response_text
+                    ).text
+                    response_author = response_container.find_element(
+                        By.XPATH, x_response_author
+                    ).text
 
                     response = {"author": response_author, "text": response_text}
 
@@ -88,7 +92,9 @@ class Conversation:
 
                 # Parsing the date
                 date = datetime.strptime(date_str, "%H:%M, %d/%m/%Y")
-                messages_list.append({"date": date, "author": author, "text": text, "response": response})
+                messages_list.append(
+                    {"date": date, "author": author, "text": text, "response": response}
+                )
 
             # Note : img elements are currently not recognized
             # So theses errors are handled by NoSuchElementException
@@ -118,31 +124,40 @@ class Conversation:
         file = File()
         old_hash = file.read()
         new_hash = ""
-        index = 0
+        index = -1
 
-        for idx,message in enumerate(messages):
+        for idx, message in enumerate(messages):
 
             hash_string = (
-                        str(message['date'].timestamp()) 
-                        + message['author'] 
-                        + message['text']
-                        )
+                str(message["date"].timestamp()) + message["author"] + message["text"]
+            )
 
-            if(message['response'] != None):   
-                hash_string += message['response']['author'] + message['response']['text']
-            
-            new_hash = sha256(hash_string.encode('utf-8')).hexdigest()
+            if message["response"] != None:
+                hash_string += (
+                    message["response"]["author"] + message["response"]["text"]
+                )
 
-            if(new_hash == old_hash):
+            new_hash = sha256(hash_string.encode("utf-8")).hexdigest()
+
+            if new_hash == old_hash:
                 index = idx
 
-        del messages[0:index + 1]
+        if(index > -1):
+            del messages[0 : index + 1]
 
         for message in messages:
+            is_response = False
 
-            if(message["response"] != None):
-                print("In response to : [" + message["response"]["author"] + " : " + message["response"]["text"] + "] : ", end = '')
-
+            if message["response"] != None:
+                print(
+                    "In response to : ["
+                    + message["response"]["author"]
+                    + " : "
+                    + message["response"]["text"]
+                    + "] : ",
+                    end="",
+                )
+                is_response = True
             print(
                 Conversation.__format_date(message["date"])
                 + " "
@@ -151,36 +166,77 @@ class Conversation:
                 + message["text"]
             )
 
+            # Discord Integration #
+
             Discord = None
-
-            sws_code = Conversation.is_sws_code(message['text'])
-
+            sws_code = Conversation.is_sws_code(message["text"])
+            is_important = Conversation.is_important(message["text"])
+            is_mentionned = Conversation.is_mentionned(message["text"])
             # Check if this is a SWS code.
-            if ( sws_code != None ):                
+            if sws_code != None:
                 Discord = DiscordWH(
-                    WebHooks.WHATSAPP.value, sws_code, message["author"], True
+                    WebHooks.WHATSAPP.value,
+                    sws_code,
+                    message["author"],
+                    message["date"].timestamp(),
+                    True,
                 )
-
+            elif is_important:
+                Discord = DiscordWH(
+                    WebHooks.WHATSAPP.value,
+                    "**" + message["text"] + "**",
+                    message["author"],
+                    message["date"].timestamp(),
+                    True,
+                )
+            elif is_mentionned != None:
+                Discord = DiscordWH(
+                    WebHooks.WHATSAPP.value,
+                    message["text"],
+                    message["author"],
+                    message["date"].timestamp(),
+                    False,
+                    is_mentionned
+                )
             else:
-                # TODO send response message and author if any
-                Discord = DiscordWH(
-                    WebHooks.WHATSAPP.value, message["text"], message["author"]
-                )
+                if is_response:
+                    Discord = DiscordWH(
+                        WebHooks.WHATSAPP.value,
+                        "> ***"
+                        + message["response"]["author"]
+                        + "*** : *"
+                        + message["response"]["text"]
+                        + "*\n\n"
+                        + message["text"],
+                        message["author"],
+                        message["date"].timestamp(),
+                    )
+                else:
+                    Discord = DiscordWH(
+                        WebHooks.WHATSAPP.value,
+                        message["text"],
+                        message["author"],
+                        message["date"].timestamp(),
+                    )
 
-            #Discord.execute()
-            #time.sleep(2)
+            Discord.execute()
+            time.sleep(2)
 
-        if(len(messages) > 0):
+        # Manage the last message with a sha256
+        if len(messages) > 0:
             hash_string = (
-                str(messages[len(messages) - 1]['date'].timestamp()) 
-                + messages[len(messages) - 1]['author'] 
-                + messages[len(messages) - 1]['text']
+                str(messages[len(messages) - 1]["date"].timestamp())
+                + messages[len(messages) - 1]["author"]
+                + messages[len(messages) - 1]["text"]
+            )
+
+            if messages[len(messages) - 1]["response"] != None:
+                hash_string += (
+                    messages[len(messages) - 1]["response"]["author"]
+                    + messages[len(messages) - 1]["response"]["text"]
                 )
 
-            if(messages[len(messages) - 1]['response'] != None):   
-                hash_string += messages[len(messages) - 1]['response']['author'] + messages[len(messages) - 1]['response']['text']
-
-            file.write(sha256(hash_string.encode('utf-8')).hexdigest()) 
+            file.write(sha256(hash_string.encode("utf-8")).hexdigest())
 
     ##
     ## Sends a message.
@@ -218,4 +274,44 @@ class Conversation:
                 good = False
         if good:
             return code
+        return None
+
+    ##
+    ## Check for important messages.
+    ##
+    ## :returns:   Boolean.
+    ##
+    @staticmethod
+    def is_important(message):
+        res = False
+        check = ["urgent", "urgence", "impératif"]
+        distanciel = ["distanciel", "à distance", "a distance", "hybride"]
+        for c in check:
+            if c in message.lower():
+                res = True
+        for c in distanciel:
+            if c in message.lower():
+                res = True
+        return res
+
+    ##
+    ## Check for important messages.
+    ##
+    ## :returns:   Boolean.
+    ##
+    @staticmethod
+    def is_mentionned(message):
+        res = False
+        names = ["luca randazzo", "luca randazo", "thomas peugnet", "thomas", "luca"]
+        for c in names:
+            if c in message.lower():
+                res = True
+                name = c
+        if res:
+            if "luca" in name:
+                pseudo = "likir09"
+            elif "thomas" in name:
+                pseudo = "DriftKing"
+            return pseudo
+
         return None

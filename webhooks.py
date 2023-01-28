@@ -10,7 +10,7 @@ import enum
 
 
 class WebHooks(enum.Enum):
-    # Webhook for the #classroom channel - L3-RS2
-    WHATSAPP = "https://discord.com/api/webhooks/1063240541116039188/YT8mL5dHqIpoYVwz7WW6JxRc1r8DWrZhgM_kHlaVBhFCwfwoXk1mxmlit3e1CgUDiKRX"
+    # Webhook for the #classroom channel
     # Webhook for the #me
+    WHATSAPP = "https://discordapp.com/api/webhooks/..."
     bot = "https://discordapp.com/api/webhooks/..."

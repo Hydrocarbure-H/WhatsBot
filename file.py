@@ -1,7 +1,7 @@
 class File:
 
     def __init__(self):
-        self.__file = open("last_message", "r+")
+        self.__file = open("/whatsbot/last_message", "r+")
 
     def __del__(self):
         self.__file.close()

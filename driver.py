@@ -6,7 +6,7 @@ from selenium.webdriver.chrome.options import Options
 class Driver:
     def __init__(self):
         chrome_options = Options()
-        chrome_options.add_argument("--user-data-dir=/home/seluser/WhatsappBot-data")
+        chrome_options.add_argument("--user-data-dir=/WhatsappBot-data")
         # Delete Automation detection flag
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
         # chrome_options.add_argument("window-size=1920,1080")
